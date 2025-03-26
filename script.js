@@ -1,12 +1,12 @@
 async function generateHMAC(secretKey) {
-  log("Generating HMAC with secretKey:", secretKey);
+  log("Generating HMAC with secretKey: " + secretKey);
 
   const encoder = new TextEncoder();
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24)); // Calculate days since epoch
-  log("Days since epoch:", daysSinceEpoch);
+  log("Days since epoch: "+ daysSinceEpoch);
 
   const message = daysSinceEpoch.toString(); // Use days since epoch as the message
-  log("HMAC message:", message);
+  log("HMAC message: " + message);
 
   try {
     // Import the key
@@ -29,7 +29,7 @@ async function generateHMAC(secretKey) {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    log("Generated HMAC signature:", signature);
+    log("Generated HMAC signature: "+ signature);
     return signature;
   } catch (error) {
     console.error("Error generating HMAC:", error.message);
@@ -51,13 +51,11 @@ async function updateEmailsOnServer(signature, mode, email) {
   const queryString = new URLSearchParams(params).toString();
   const url = `${apiUrl}?${queryString}`;
 
-  log("Request URL:", url);
-
   try {
     const response = await fetch(url);
     const data = await response.json();
 
-    log("Server response:", data);
+    log("Server response: "+ data);
 
     if (data.status !== "Success") {
       showError("Error");
@@ -73,7 +71,7 @@ async function updateEmailsOnServer(signature, mode, email) {
 }
 
 async function fetchEmailsFromServer(signature) {
-  log("Fetching emails from server with signature:", signature);
+  log("Fetching emails from server with signature: "+ signature);
 
   const apiUrl =
     "https://script.google.com/macros/s/AKfycbxlxCngh5ANvyoTuagmxXdcN8bxen6m4smuzsQlfZTKuNyx4V5jd1q9ISqQnYMRBrtd/exec";
@@ -86,13 +84,12 @@ async function fetchEmailsFromServer(signature) {
   const queryString = new URLSearchParams(params).toString();
   const url = `${apiUrl}?${queryString}`;
 
-  log("Request URL for fetching emails:", url);
 
   try {
     const response = await fetch(url);
     const data = await response.json();
 
-    log("Emails fetched from server:", data);
+    log("Emails fetched from server: "+ data);
 
     if (data.status === "Success") {
       return data.emails; // Return the list of emails
@@ -356,7 +353,7 @@ document
       return;
     }
 
-    log("Passcode submitted:" + passcode);
+    log("Passcode submitted: -----");
     errorMessage.textContent = ""; // Clear error
     document.getElementById("passcode-screen").style.display = "none";
     document.getElementById("animation-screen").style.display = "block";
@@ -369,7 +366,7 @@ document
       const emails = await fetchEmailsFromServer(signature);
 
       // Navigate to home screen and display emails
-      log("Emails retrieved successfully:", emails);
+      log("Emails retrieved successfully");
       document.getElementById("animation-screen").style.display = "none";
       displayEmailsWithActions(emails, signature);
     } catch (error) {
