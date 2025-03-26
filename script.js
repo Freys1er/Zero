@@ -60,14 +60,14 @@ async function updateEmailsOnServer(signature, mode, email) {
     log("Server response:", data);
 
     if (data.status !== "Success") {
-      throw new Error(data.message || "Failed to update emails on the server.");
+      showError("Error");
+      return false;
     }
 
     log(`Successfully updated server with mode: ${mode}, email: ${email}`);
     return true; // Successfully updated
   } catch (error) {
-    console.error(`Error updating server with mode: ${mode}, email: ${email}`, error.message);
-    alert(`Error: Unable to ${mode.toLowerCase()} email on server.`);
+    showError("Incorrect passkey");
     return false; // Failed to update
   }
 }
@@ -97,11 +97,11 @@ async function fetchEmailsFromServer(signature) {
     if (data.status === "Success") {
       return data.emails; // Return the list of emails
     } else {
-      throw new Error(data.message || "Failed to fetch emails from the server.");
+      showError("Incorrect passkey")
+      return false;
     }
   } catch (error) {
-    console.error("Error fetching emails:", error.message);
-    alert("Error: Unable to fetch emails. Please try again.");
+    showError("Incorrect passkey")
     return [];
   }
 }
