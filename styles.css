@@ -118,3 +118,147 @@ button:hover {
   background-color: #ff0000;
   color: #000;
 }
+
+#passcode-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#username, #passcode, #submit-passcode {
+  margin: 10px 0;
+}
+
+#titleDiv {
+  position: absolute; /* Enables precise positioning */
+  top: 0; /* Aligns to the top of the screen */
+  left: 0; /* Optionally aligns it to the left */
+  width: 100%; /* Makes it stretch across the screen */
+  text-align: center; /* Centers the text horizontally */
+  padding: 10px; /* Adds spacing inside the div */
+  font-size: 24px;
+  color: #00ff00;
+  font-weight: bold;
+}
+
+/* styles.css */
+#addEmailContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px;
+  background-color: black;
+}
+
+#emailInput {
+  padding: 10px;
+  margin-right: 10px;
+  flex: 1; /* Enables it to take up more space */
+  width: 300px; /* Makes the input box wider */
+}
+
+#addButton {
+  padding: 10px;
+}
+
+/* General styling for the home screen */
+#home-screen {
+  background-color: black; /* Hacker-style black background */
+  color: #00FF00; /* Hacker-style green text color */
+  font-family: 'Courier New', Courier, monospace;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center; /* Align all text to the center */
+}
+
+/* Styling for the file uploading section */
+#uploadForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the form elements */
+  margin: 0 auto; /* Center the form horizontally */
+  width: 90%; /* Consistent width for all sections */
+  margin-bottom: 20px;
+}
+
+#fileUpload {
+  color: white;
+  background-color: black;
+  border: 2px solid #00FF00;
+  border-radius: 5px;
+  padding: 5px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#uploadButton {
+  color: black;
+  background-color: #00FF00;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+#uploadButton:hover {
+  background-color: white;
+  color: black;
+  border: 2px solid #00FF00;
+}
+
+/* Styling for the email composing section */
+/* Styling for the email composing section */
+#emailTextBox {
+  width: calc(100% - 20px); /* Adjusted width to account for padding */
+  max-width: 400px; /* Consistent max width for all sections */
+  border: 2px solid #00FF00;
+  background-color: black;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  margin: 10px auto; /* Center the text box horizontally with spacing */
+  box-sizing: border-box; /* Ensures padding is included in the width */
+}
+
+textarea::placeholder {
+  color: #00FF00; /* Hacker-style placeholder text color */
+}
+
+/* General wrapper for consistent alignment */
+#emailContentSection {
+  width: 400px; /* Consistent width for this section */
+  margin: 0 auto; /* Center section horizontally */
+  padding: 10px; /* Add padding inside the border */
+  border: 2px solid #00FF00;
+  border-radius: 5px;
+  background-color: black;
+  text-align: center;
+  box-sizing: border-box; /* Ensures padding doesn’t add overflow */
+}
+
+/* Styling for the email list section */
+#emailList {
+  width: 400px; /* Consistent width for all sections */
+  margin: 0 auto; /* Center the list horizontally */
+  padding: 10px;
+  border: 2px solid #00FF00;
+  border-radius: 5px;
+  background-color: black;
+  color: #00FF00;
+  text-align: center;
+}
+
+body {
+  overflow-x: hidden; /* Disables horizontal scrolling */
+}

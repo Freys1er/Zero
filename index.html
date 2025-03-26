@@ -9,12 +9,13 @@
 <body>
   <div id="passcode-screen">
     <h1>Secure Access to Zero</h1>
+    <input type="username" id="username" placeholder="Enter Username" required>
     <input type="password" id="passcode" placeholder="Enter Passkey" required>
     <button id="submit-passcode">Connect</button>
   </div>
 
   <div id="animation-screen" style="display: none;">
-    <h1>Connecting to Server...</h1>
+    <h1>Verifying Identity...</h1>
     <div class="loader"></div>
   </div>
 
@@ -27,8 +28,6 @@
   </div>
 
   <div id="home-screen" style="display: none;">
-    <h1>Welcome to Zero.</h1>
-    <p>You are now securely connected.</p>
   </div>
 
   <script src="script.js"></script>
