@@ -356,7 +356,7 @@ document
       return;
     }
 
-    log("Passcode submitted:", passcode);
+    log("Passcode submitted:" + passcode);
     errorMessage.textContent = ""; // Clear error
     document.getElementById("passcode-screen").style.display = "none";
     document.getElementById("animation-screen").style.display = "block";
@@ -373,22 +373,23 @@ document
       document.getElementById("animation-screen").style.display = "none";
       displayEmailsWithActions(emails, signature);
     } catch (error) {
-      console.error("Error during passcode submission flow:", error.message);
-      document.getElementById("animation-screen").style.display = "none";
-      document.getElementById("passcode-screen").style.display = "block";
-      errorMessage.textContent = `Error: ${error.message}`;
+      showError("Incorrect Passkey")
     }
   });
 
 function showError(message) {
-  log("Showing error message:", message);
   document.getElementById("error-message").textContent = message;
   document.getElementById("error-screen").style.display = "flex";
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("passcode-screen").style.display = "none";
+    document.getElementById("animation-screen").style.display = "none";
+  });
 }
+
 
 // Add functionality to the "Back" button
 document.getElementById("back-button").addEventListener("click", () => {
   log("Back button clicked.");
   document.getElementById("error-screen").style.display = "none";
-  document.getElementById("passcode-screen").style.display = "block";
+  document.getElementById("passcode-screen").style.display = "flex";
 });
