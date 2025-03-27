@@ -1,6 +1,5 @@
 async function generateHMAC(secretKey) {
-  log("Generating HMAC with secretKey: " + secretKey);
-
+  //Dont show secretKey
   const encoder = new TextEncoder();
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24)); // Calculate days since epoch
   log("Days since epoch: "+ daysSinceEpoch);
