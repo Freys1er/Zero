@@ -40,7 +40,7 @@ async function updateEmailsOnServer(signature, mode, email) {
   log(`Updating server with mode: ${mode}, email: ${email}`);
 
   const apiUrl =
-    "https://script.google.com/macros/s/AKfycbxlxCngh5ANvyoTuagmxXdcN8bxen6m4smuzsQlfZTKuNyx4V5jd1q9ISqQnYMRBrtd/exec";
+    "https://script.google.com/macros/s/AKfycbwYdnxmwgVWfQYFgdGhjCF3qnq4GPq9BQgtFKZX9gvXZHrhVc1dsn9LAi-C5zoE2-22wQ/exec";
 
   const params = {
     signature: signature,
@@ -73,7 +73,7 @@ async function fetchEmailsFromServer(signature) {
   log("Fetching emails from server with signature: "+ signature);
 
   const apiUrl =
-    "https://script.google.com/macros/s/AKfycbxlxCngh5ANvyoTuagmxXdcN8bxen6m4smuzsQlfZTKuNyx4V5jd1q9ISqQnYMRBrtd/exec";
+    "https://script.google.com/macros/s/AKfycbwYdnxmwgVWfQYFgdGhjCF3qnq4GPq9BQgtFKZX9gvXZHrhVc1dsn9LAi-C5zoE2-22wQ/exec";
 
   const params = {
     signature: signature,
