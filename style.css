@@ -1,0 +1,170 @@
+body {
+  background-color: #000;
+  color: #0f0; /* Bright green */
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0;
+  padding: 20px;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+.terminal-container {
+  border: 1px solid #0f0;
+  padding: 15px;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 15px #0f0 inset;
+  background-color: rgba(0, 20, 0, 0.8); /* Slightly transparent dark green */
+}
+
+#output pre,
+#login-status,
+#action-status {
+  margin: 5px 0;
+  white-space: pre-wrap; /* Allow wrapping */
+  word-wrap: break-word; /* Break long words */
+  animation: flicker 1.5s infinite alternate; /* Subtle flicker */
+}
+
+.center-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh; /* Center vertically */
+  text-align: center;
+}
+
+#login-section {
+  /* Styles for the Google button container might be needed */
+}
+
+#main-content {
+   flex-grow: 1; /* Take remaining space */
+   display: flex;
+   flex-direction: column;
+}
+
+#email-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  max-height: 40vh; /* Limit height */
+  overflow-y: auto; /* Add scroll if needed */
+  border: 1px dashed #0a0;
+  padding: 10px;
+}
+
+#email-list li {
+  padding: 5px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  word-break: break-all; /* Break long emails */
+}
+
+#email-list li:hover {
+  background-color: #0f0;
+  color: #000;
+}
+
+.separator {
+  border: none;
+  height: 1px;
+  background-color: #0f0;
+  margin: 15px 0;
+}
+
+.input-area {
+  display: flex;
+  align-items: center;
+  margin-top: auto; /* Push to bottom */
+  padding-top: 10px;
+}
+
+.prompt {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+#email-input {
+  flex-grow: 1;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid #0f0;
+  color: #0f0;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 1em;
+  outline: none; /* Remove default outline */
+  margin-right: 10px;
+}
+
+#email-input::placeholder {
+  color: #090;
+  opacity: 0.7;
+}
+
+button#add-email-btn {
+  background-color: #0f0;
+  color: #000;
+  border: none;
+  padding: 8px 15px;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+button#add-email-btn:hover {
+  background-color: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+}
+
+.status-message {
+  color: #ff0; /* Yellow for status */
+  margin-top: 10px;
+  min-height: 1.2em; /* Reserve space */
+}
+
+#loading-indicator {
+  position: fixed; /* Or absolute relative to container */
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0,0,0,0.7);
+  padding: 5px 10px;
+  border: 1px solid #0f0;
+}
+
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes flicker {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.9; }
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); content: "|"; }
+25% { content: "/"; }
+50% { transform: rotate(180deg); content: "-"; }
+75% { content: "\\"; }
+100% { transform: rotate(360deg); content: "|"; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+width: 8px;
+}
+::-webkit-scrollbar-track {
+background: #050;
+}
+::-webkit-scrollbar-thumb {
+background: #0f0;
+}
+::-webkit-scrollbar-thumb:hover {
+background: #3f3;
+}

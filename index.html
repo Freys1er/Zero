@@ -1,34 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Access</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>:: HACKER_INTERFACE ::</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <div id="passcode-screen">
-    <h1>Hello, Anonymous</h1>
-    <input type="password" id="passcode" placeholder="Enter Passkey to connect" required>
-    <button id="submit-passcode">Connect</button>
-  </div>
+    <div class="terminal-container">
+        <div id="output">
+            <pre>Initializing HACKER_INTERFACE v1.0...</pre>
+            <pre>Awaiting user authentication...</pre>
+        </div>
 
-  <div id="animation-screen" style="display: none;">
-    <h1>Verifying Identity...</h1>
-    <div class="loader"></div>
-  </div>
+        <div id="login-section" class="center-content">
+            <!-- Google Sign In Button -->
+            <div id="g_id_onload"
+                 data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-login_uri=""
+                 data-auto_prompt="false">
+            </div>
 
-  <div id="error-screen" style="display: none;">
-    <div class="error-circle">
-      <div class="error-x">X</div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left">
+            </div>
+             <pre id="login-status" class="status-message"></pre>
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <pre>Authentication successful. Access granted.</pre>
+            <pre>Registered Email Targets:</pre>
+            <ul id="email-list">
+                <!-- Emails will be loaded here -->
+            </ul>
+            <hr class="separator">
+            <div class="input-area">
+                <span class="prompt">></span>
+                <input type="email" id="email-input" placeholder="add target email..." autocomplete="off">
+                <button id="add-email-btn">ADD</button>
+            </div>
+             <pre id="action-status" class="status-message"></pre>
+        </div>
+
+         <div id="loading-indicator" style="display: none;">
+             <pre> > Processing request... <span class="spinner">|</span></pre>
+         </div>
+
     </div>
-    <p id="error-message"></p>
-    <button id="back-button">Back</button>
-  </div>
 
-  <div id="home-screen" style="display: none;">
-  </div>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

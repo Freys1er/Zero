@@ -1,391 +1,339 @@
-async function generateHMAC(secretKey) {
-  //Dont show secretKey
-  const encoder = new TextEncoder();
-  const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24)); // Calculate days since epoch
-  log("Days since epoch: "+ daysSinceEpoch);
+// --- Configuration ---
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwYdnxmwgVWfQYFgdGhjCF3qnq4GPq9BQgtFKZX9gvXZHrhVc1dsn9LAi-C5zoE2-22wQ/exec"; // Ends in /exec
+const GOOGLE_CLIENT_ID = "490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com";
 
-  const message = daysSinceEpoch.toString(); // Use days since epoch as the message
-  log("HMAC message: " + message);
+// --- DOM Elements ---
+// (Keep the same DOM element variables as before)
+const loginSection = document.getElementById('login-section');
+const mainContent = document.getElementById('main-content');
+const emailList = document.getElementById('email-list');
+const emailInput = document.getElementById('email-input');
+const addEmailBtn = document.getElementById('add-email-btn');
+const loginStatus = document.getElementById('login-status');
+const actionStatus = document.getElementById('action-status');
+const loadingIndicator = document.getElementById('loading-indicator');
+const output = document.getElementById('output');
 
-  try {
-    // Import the key
-    const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(secretKey),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
+// --- State ---
+let currentEmails = [];
+let idToken = null; // << Store the verified ID token
 
-    // Generate the HMAC signature
-    const signatureBuffer = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(message)
-    );
+// --- Functions ---
 
-    const signature = Array.from(new Uint8Array(signatureBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-
-    log("Generated HMAC signature: "+ signature);
-    return signature;
-  } catch (error) {
-    console.error("Error generating HMAC:", error.message);
-    throw error;
+// logToTerminal, showLoading, updateStatus, displayEmails (Keep these as before)
+/**
+ * Appends a message to the main output area.
+ * @param {string} message The message to log.
+ * @param {string} type 'info', 'success', 'error' (optional)
+ */
+function logToTerminal(message, type = 'info') {
+  const pre = document.createElement('pre');
+  const timestamp = new Date().toLocaleTimeString();
+  pre.textContent = `[${timestamp}] ${message}`;
+  switch (type) {
+    case 'error': pre.style.color = '#f00'; break; // Red
+    case 'success': pre.style.color = '#0f0'; break; // Green
+    case 'warning': pre.style.color = '#ff0'; break; // Yellow
+    default: pre.style.color = '#0ff'; // Cyan
   }
+  output.appendChild(pre);
+  output.scrollTop = output.scrollHeight; // Auto-scroll
 }
 
-async function updateEmailsOnServer(signature, mode, email) {
-  log(`Updating server with mode: ${mode}, email: ${email}`);
 
-  const apiUrl =
-    "https://script.google.com/macros/s/AKfycbwYdnxmwgVWfQYFgdGhjCF3qnq4GPq9BQgtFKZX9gvXZHrhVc1dsn9LAi-C5zoE2-22wQ/exec";
+/**
+ * Shows or hides the loading indicator.
+ * @param {boolean} show True to show, false to hide.
+ */
+function showLoading(show) {
+  loadingIndicator.style.display = show ? 'block' : 'none';
+}
 
-  const params = {
-    signature: signature,
-    emails: JSON.stringify({ mode, emails: [email] }),
+/**
+ * Updates the status message below the login or action area.
+ * @param {string} message The message text.
+ * @param {boolean} isError True if it's an error message.
+ * @param {string} area 'login' or 'action'.
+ */
+
+
+function updateStatus(message, isError = false, area = 'action', details = null) {
+  const statusElement = area === 'login' ? loginStatus : actionStatus;
+  let displayMessage = message;
+
+  // Append failed User ID if present in details
+  if (isError && details && details.failedUserId) {
+    displayMessage += ` (Detected User ID: ${details.failedUserId})`;
+  } else if (isError && details && details.message && details.message !== message) {
+    // Sometimes the core message might be in details if only details was passed
+    displayMessage = details.message;
+  }
+
+
+  statusElement.textContent = displayMessage;
+  statusElement.style.color = isError ? '#f00' : '#ff0'; // Red for error, Yellow for status
+
+  clearTimeout(statusElement.timer);
+  statusElement.timer = setTimeout(() => {
+    if (statusElement.textContent === displayMessage) {
+      statusElement.textContent = '';
+    }
+  }, isError ? 9000 : 5000); // Longer display for errors, especially with IDs
+}
+
+/**
+ * Renders the list of emails in the UI.
+ * @param {string[]} emails Array of email addresses.
+ */
+function displayEmails(emails) {
+  emailList.innerHTML = ''; // Clear existing list
+  currentEmails = Array.isArray(emails) ? emails : []; // Ensure it's an array
+  if (!currentEmails || currentEmails.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = 'No target emails registered.';
+    li.style.fontStyle = 'italic';
+    li.style.color = '#aaa';
+    emailList.appendChild(li);
+    return;
+  }
+
+  currentEmails.forEach(email => {
+    const li = document.createElement('li');
+    li.textContent = email;
+    li.title = `Click to remove ${email}`;
+    // Use an arrow function to properly capture the email for the handler
+    li.addEventListener('click', () => handleRemoveEmail(email));
+    emailList.appendChild(li);
+  });
+}
+
+
+/**
+ * Calls the Apps Script backend using GET or POST.
+ * @param {string} method 'GET' or 'POST'.
+ * @param {string} action The 'action' parameter/payload field.
+ * @param {object} params Data for GET query string or POST body.
+ * @returns {Promise<object>} Promise resolving with the JSON response.
+ */
+
+async function callAppsScript(action, params = {}) {
+  showLoading(true);
+  const requestParams = { ...params }; // Clone params
+  let isLoginAttempt = (action === 'verify'); // Distinguish initial login
+
+  // Add token to parameters if we have one
+  if (idToken) {
+    requestParams.token = idToken;
+  } else if (!isLoginAttempt) {
+    // If not logged in (no token) and not the initial login attempt, fail fast
+    logToTerminal(`Action '${action}' requires authentication. Please sign in.`, 'error');
+    updateStatus("Authentication required.", true, 'action');
+    showLoading(false);
+    return { success: false, message: "Client-side check: Authentication required." };
+  }
+  // For the initial 'verify' action, the token comes directly in params from handleCredentialResponse
+
+
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.append('action', action);
+  for (const key in requestParams) {
+    // Ensure token passed in params (for verify) isn't overwritten by null idToken
+    if (requestParams[key] !== undefined && requestParams[key] !== null) {
+      url.searchParams.append(key, requestParams[key]);
+    }
+  }
+
+  const fetchOptions = {
+    method: 'GET',
+    // mode: 'cors', // Usually default
+    // redirect: 'follow' // Usually default
   };
 
-  const queryString = new URLSearchParams(params).toString();
-  const url = `${apiUrl}?${queryString}`;
-
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    logToTerminal(`> GET Request: action=${action} (Token: ${requestParams.token ? 'Present' : 'Absent'})`);
+    const response = await fetch(url.toString(), fetchOptions);
 
-    log("Server response: "+ data);
+    logToTerminal(`< Response Status: ${response.status} ${response.statusText}`);
 
-    if (data.status !== "Success") {
-      showError("Error");
-      return false;
+    if (response.status === 0) {
+      throw new Error("Network request failed (status 0). Check CORS, network, and script deployment.");
     }
-
-    log(`Successfully updated server with mode: ${mode}, email: ${email}`);
-    return true; // Successfully updated
-  } catch (error) {
-    showError("Incorrect passkey");
-    return false; // Failed to update
-  }
-}
-
-async function fetchEmailsFromServer(signature) {
-  log("Fetching emails from server with signature: "+ signature);
-
-  const apiUrl =
-    "https://script.google.com/macros/s/AKfycbwYdnxmwgVWfQYFgdGhjCF3qnq4GPq9BQgtFKZX9gvXZHrhVc1dsn9LAi-C5zoE2-22wQ/exec";
-
-  const params = {
-    signature: signature,
-    emails: JSON.stringify({ mode: "", emails: [] }),
-  };
-
-  const queryString = new URLSearchParams(params).toString();
-  const url = `${apiUrl}?${queryString}`;
-
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-
-    log("Emails fetched from server: "+ data);
-
-    if (data.status === "Success") {
-      return data.emails; // Return the list of emails
-    } else {
-      showError("Incorrect passkey")
-      return false;
-    }
-  } catch (error) {
-    showError("Incorrect passkey")
-    return [];
-  }
-}
-// Global log storage
-const logMessages = []; // Array to store all log messages
-
-// Global log function
-function log(message) {
-  console.log(message); // Log to browser console
-
-  // Record the message in the array
-  logMessages.push(message);
-}
-
-// Function to render logMessages in the custom console
-function renderLogMessages() {
-  const consoleSection = document.getElementById('consoleSection');
-
-  // Make sure the console section exists before rendering
-  if (consoleSection) {
-    // Clear any existing content in the console
-    consoleSection.innerHTML = "<p>Console</p><br>";
-
-    // Loop through the logMessages array and display each message
-    logMessages.forEach((msg) => {
-      const logEntry = document.createElement("div");
-      logEntry.textContent = msg;
-      logEntry.style.margin = "5px 0";
-
-      // Append each log entry to the custom console
-      consoleSection.appendChild(logEntry);
-    });
-
-    // Auto-scroll to the bottom
-    consoleSection.scrollTop = consoleSection.scrollHeight;
-  }
-}
-
-
-function displayEmailsWithActions(emails, signature) {
-  log("Displaying emails:", emails);
-
-  // Select the home screen and clear existing content
-  const homeScreen = document.getElementById("home-screen");
-  homeScreen.style.overflowY = "scroll"; // Enable vertical scrolling
-  homeScreen.style.maxHeight = "100vh"; // Limit the height to the viewport
-  homeScreen.style.padding = "50px 0px 50px 0px"; // Add padding for aesthetic spacing
-
-  homeScreen.innerHTML = ""; // Clear previous content
-
-  // Define a consistent width for all sections
-  const sectionWidth = "80%";
-
-  // File Uploading Section
-  const fileSection = document.createElement("div");
-  fileSection.style.width = sectionWidth;
-  fileSection.style.border = "2px solid #ccc";
-  fileSection.style.padding = "10px";
-  fileSection.style.margin = "10px auto";
-  fileSection.style.borderRadius = "8px";
-  fileSection.innerHTML = `
-      <div id="titleDiv">Welcome to Zero.</div>
-      <p>File uploading</p>
-      <form id="uploadForm">
-          <input type="file" id="fileUpload" />
-          <button type="button" id="uploadButton">Upload</button>
-      </form>
-  `;
-  homeScreen.appendChild(fileSection);
-
-  // Email Content Section
-  const emailContentSection = document.createElement("div");
-  emailContentSection.style.width = sectionWidth;
-  emailContentSection.style.border = "2px solid #ccc";
-  emailContentSection.style.padding = "10px";
-  emailContentSection.style.margin = "10px auto";
-  emailContentSection.style.borderRadius = "8px";
-  emailContentSection.innerHTML = `
-      <p>Compose Email</p>
-      <textarea id="emailTextBox" placeholder="Write your email here" rows="6" style="width: 100%;"></textarea>
-  `;
-  homeScreen.appendChild(emailContentSection);
-
-  // Email List Section
-  const emailListSection = document.createElement("div");
-  emailListSection.style.width = sectionWidth;
-  emailListSection.style.border = "2px solid #ccc";
-  emailListSection.style.padding = "10px";
-  emailListSection.style.margin = "10px auto";
-  emailListSection.style.borderRadius = "8px";
-
-  const emailListTitle = document.createElement("p");
-  emailListTitle.textContent = "Email List";
-  emailListSection.appendChild(emailListTitle);
-
-  // Add "Add Email" functionality
-  const addEmailContainer = createAddEmailSection(emails, signature);
-  emailListSection.appendChild(addEmailContainer);
-
-  const emailListContainer = document.createElement("div");
-  const emailList = document.createElement("ul");
-  emailList.style.listStyle = "none";
-  emailList.style.padding = "0";
-
-  // Populate email list with actions
-  emails.forEach((email, index) => {
-    const emailItem = createEmailItem(email, index, emails, signature);
-    emailList.appendChild(emailItem);
-  });
-
-  emailListContainer.appendChild(emailList);
-  emailListSection.appendChild(emailListContainer);
-  homeScreen.appendChild(emailListSection);
-
-  // Custom Console Section
-
-  let consoleSection = document.getElementById('consoleSection');
-  if (!consoleSection) {
-    const consoleSection = document.createElement("div");
-    consoleSection.id = "consoleSection";
-    consoleSection.style.width = sectionWidth;
-    consoleSection.style.border = "2px solid #FFFFFF";
-    consoleSection.style.backgroundColor = "#000";
-    consoleSection.style.padding = "10px";
-    consoleSection.style.margin = "10px auto";
-    consoleSection.style.borderRadius = "8px";
-    consoleSection.style.color = "#00FF00";
-    consoleSection.style.fontFamily = "'Courier New', Courier, monospace";
-    consoleSection.style.whiteSpace = "pre-wrap";
-    consoleSection.innerHTML = "<p>Console</p><br>";
-    homeScreen.appendChild(consoleSection);
-
-  }
-  // Append the custom console to the home screen
-
-  renderLogMessages();
-
-  // Custom log function to output to console and custom console
-
-  // Example usage of the log function
-  log("Page initialized.");
-  log("Number of emails displayed: " + emails.length);
-
-  homeScreen.style.display = "block";
-}
-
-
-// Helper Function: Create an email item with hover and click actions
-function createEmailItem(email, index, emails, signature) {
-  const emailItem = document.createElement("li");
-
-  // Basic styling
-  emailItem.style.display = "inline-block";
-  emailItem.style.padding = "10px";
-  emailItem.style.margin = "5px";
-  emailItem.style.border = "1px solid #ccc";
-  emailItem.style.borderRadius = "4px";
-  emailItem.style.cursor = "pointer";
-  emailItem.style.transition = "background-color 0.3s, color 0.3s";
-
-  // Set the email text
-  emailItem.textContent = email;
-
-  // Add hover effects
-  emailItem.addEventListener("mouseover", () => {
-    emailItem.style.backgroundColor = "red";
-    emailItem.style.color = "#fff";
-  });
-  emailItem.addEventListener("mouseout", () => {
-    emailItem.style.backgroundColor = "";
-    emailItem.style.color = "";
-  });
-
-  // Add click action to delete the email
-  emailItem.addEventListener("click", async () => {
-    log("Email clicked (delete):", email);
-    const success = await updateEmailsOnServer(signature, "Remove", email);
-    if (success) {
-      emails.splice(index, 1);
-      displayEmailsWithActions(emails, signature);
-    }
-  });
-
-  return emailItem;
-}
-// Helper Function: Create the "Add Email" section
-// Helper Function: Create the "Add Email" section
-function createAddEmailSection(emails, signature) {
-  const addEmailContainer = document.createElement("div");
-  addEmailContainer.style.display = "flex"; // Align items in a row
-  addEmailContainer.style.justifyContent = "center"; // Center align
-  addEmailContainer.style.alignItems = "center"; // Align vertically
-
-  const emailInput = document.createElement("input");
-  emailInput.type = "email";
-  emailInput.id = "emailInput";
-  emailInput.placeholder = "Enter new email and press Enter";
-  emailInput.style.padding = "10px";
-  emailInput.style.border = "2px solid #00FF00";
-  emailInput.style.borderRadius = "5px";
-  emailInput.style.backgroundColor = "black";
-  emailInput.style.color = "#00FF00";
-  emailInput.style.fontFamily = "'Courier New', Courier, monospace";
-
-  // Function to handle adding an email
-  const addEmailHandler = async () => {
-    const newEmail = emailInput.value.trim();
-    if (newEmail) {
-      log("Enter pressed with email:", newEmail);
-
-      // Temporarily clear the input field to show something is happening
-      emailInput.value = "Adding...";
-      emailInput.disabled = true;
-
-      const success = await updateEmailsOnServer(signature, "Add", newEmail);
-      if (success) {
-        emails.push(newEmail);
-      }
-
-      // Reset the input field
-      emailInput.value = "";
-      emailInput.disabled = false;
-
-      // Re-render the email list
-      displayEmailsWithActions(emails, signature);
-    }
-  };
-
-  // Add "Enter" key functionality for the input field
-  emailInput.addEventListener("keypress", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault(); // Prevent form submission or other defaults
-      addEmailHandler();
-    }
-  });
-
-  addEmailContainer.appendChild(emailInput);
-
-  return addEmailContainer;
-}
-
-
-
-document
-  .getElementById("submit-passcode")
-  .addEventListener("click", async () => {
-    const passcode = document.getElementById("passcode").value;
-    const errorMessage = document.getElementById("error-message");
-
-    if (!passcode) {
-      log("No passcode entered.");
-      return;
-    }
-
-    log("Passcode submitted: -----");
-    errorMessage.textContent = ""; // Clear error
-    document.getElementById("passcode-screen").style.display = "none";
-    document.getElementById("animation-screen").style.display = "block";
-
+    // Try to parse JSON regardless of status to get backend error details
+    let data;
     try {
-      // Generate HMAC signature
-      const signature = await generateHMAC(passcode);
-
-      // Fetch emails from the server
-      const emails = await fetchEmailsFromServer(signature);
-
-      // Navigate to home screen and display emails
-      log("Emails retrieved successfully");
-      document.getElementById("animation-screen").style.display = "none";
-      displayEmailsWithActions(emails, signature);
-    } catch (error) {
-      showError("Incorrect Passkey")
+      data = await response.json();
+    } catch (jsonError) {
+      const textResponse = await response.text();
+      logToTerminal(`! Failed to parse JSON response. Status: ${response.status}. Response: ${textResponse.substring(0, 500)}`, 'error');
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}. Response not JSON.`);
+      } else {
+        throw new Error(`Received OK status (${response.status}) but invalid JSON response.`);
+      }
     }
-  });
 
-function showError(message) {
-  document.getElementById("error-message").textContent = message;
-  document.getElementById("error-screen").style.display = "flex";
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("passcode-screen").style.display = "none";
-    document.getElementById("animation-screen").style.display = "none";
-  });
+    if (!response.ok) {
+      // Use message from JSON if available, otherwise create generic one
+      const errorMsg = data.message || `HTTP error ${response.status}`;
+      logToTerminal(`! Backend Error: ${errorMsg}`, 'error');
+      // Pass the whole data object to updateStatus for potential failedUserId
+      updateStatus(errorMsg, true, isLoginAttempt ? 'login' : 'action', data);
+      // Throw error to stop processing, but include data for context
+      const error = new Error(errorMsg);
+      error.data = data; // Attach full response data to the error
+      throw error;
+    }
+
+    // Log success/failure based on the 'success' flag in the JSON response
+    logToTerminal(`< Response OK: ${JSON.stringify(data).substring(0, 150)}...`, data.success ? 'success' : 'warning');
+
+    // Handle logical failures reported by the script (e.g., email already exists)
+    if (data.success === false) {
+      updateStatus(data.message || 'Script reported an error.', true, isLoginAttempt ? 'login' : 'action', data);
+    }
+
+    return data; // Return the parsed JSON data
+
+  } catch (error) {
+    console.error(`Error during GET action=${action}:`, error);
+    // Ensure status is updated even if error thrown before parsing data obj
+    if (!error.data) { // Check if data was attached earlier
+      logToTerminal(`! Fetch/Network Error: ${error.message}`, 'error');
+      updateStatus(`Error: ${error.message}`, true, isLoginAttempt ? 'login' : 'action');
+    }
+    // No need to update status again if already done in the !response.ok block
+
+    showLoading(false);
+    // Return a standard error object, including potential data from the error object
+    return {
+      success: false,
+      message: `Client-side/fetch error: ${error.message}`,
+      ...(error.data && { details: error.data }) // Include backend data if available
+    };
+  } finally {
+    showLoading(false);
+  }
+}
+
+/**
+ * Handles the response from Google Sign-In.
+ * @param {object} response The credential response object.
+ */
+async function handleCredentialResponse(response) {
+  logToTerminal("Google Sign-In successful. Verifying token...");
+  updateStatus("Verifying...", false, 'login');
+  const receivedToken = response.credential;
+
+  // Send token to Apps Script for verification using GET 'verify' action
+  // Pass token directly in params for this initial call
+  const verificationResult = await callAppsScript('verify', { token: receivedToken });
+
+  if (verificationResult.success) {
+    logToTerminal("Backend verification successful.", 'success');
+    updateStatus("Access granted.", false, 'login');
+    idToken = receivedToken; // << STORE the validated token globally
+    loginSection.style.display = 'none';
+    mainContent.style.display = 'flex';
+    displayEmails(verificationResult.emails || []);
+  } else {
+    logToTerminal(`Backend verification failed: ${verificationResult.message}`, 'error');
+    // updateStatus is handled within callAppsScript based on the response data
+    idToken = null; // Clear token on failure
+  }
 }
 
 
-// Add functionality to the "Back" button
-document.getElementById("back-button").addEventListener("click", () => {
-  log("Back button clicked.");
-  document.getElementById("error-screen").style.display = "none";
-  document.getElementById("passcode-screen").style.display = "flex";
+/**
+ * Handles adding a new email (using POST).
+ */
+
+
+async function handleAddEmail() {
+  const email = emailInput.value.trim();
+  if (!email) {
+    updateStatus("Email cannot be empty.", true, 'action');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    updateStatus("Invalid email format.", true, 'action');
+    return;
+  }
+  // callAppsScript will add the stored idToken automatically
+  if (!idToken) {
+    updateStatus("Authentication required. Please sign in again.", true, 'action');
+    return;
+  }
+
+  logToTerminal(`Attempting to add email: ${email}`);
+  updateStatus("Adding email...", false, 'action');
+
+  // Send request using GET. Token is added by callAppsScript.
+  const result = await callAppsScript('addEmail', { email: email });
+
+  if (result.success) {
+    logToTerminal(`Email added successfully: ${email}`, 'success');
+    updateStatus(result.message || "Email added.", false, 'action');
+    emailInput.value = '';
+    if (result.emails !== undefined) { // Update list if backend provides it
+      displayEmails(result.emails);
+    }
+  } else {
+    logToTerminal(`Failed to add email: ${result.message || 'Unknown error'}`, 'error');
+    // updateStatus is handled by callAppsScript on failure
+    // Still update list if backend provided it despite failure (e.g., 'email exists')
+    if (result.emails !== undefined) {
+      displayEmails(result.emails);
+    }
+  }
+}
+
+/**
+ * Handles removing an email when clicked (using POST).
+ * @param {string} email The email to remove.
+ */
+
+
+async function handleRemoveEmail(email) {
+  if (!idToken) {
+    updateStatus("Authentication required. Cannot remove email.", true, 'action');
+    logToTerminal("Remove cancelled: Not authenticated.", 'warning');
+    return;
+  }
+  if (!confirm(`Are you sure you want to remove ${email}?`)) {
+    return;
+  }
+
+  logToTerminal(`Attempting to remove email: ${email}`);
+  updateStatus("Removing email...", false, 'action');
+
+  // Send request using GET. Token is added by callAppsScript.
+  const result = await callAppsScript('removeEmail', { email: email });
+
+  if (result.success) {
+    logToTerminal(`Email removed successfully: ${email}`, 'success');
+    updateStatus(result.message || "Email removed.", false, 'action');
+    if (result.emails !== undefined) { // Update list if backend provides it
+      displayEmails(result.emails);
+    }
+  } else {
+    logToTerminal(`Failed to remove email: ${result.message || 'Unknown error'}`, 'error');
+    // updateStatus is handled by callAppsScript on failure
+    // Still update list if backend provided it despite failure (e.g., 'email not found')
+    if (result.emails !== undefined) {
+      displayEmails(result.emails);
+    }
+  }
+}
+
+// --- Event Listeners ---
+// (Keep the same event listeners as before)
+addEmailBtn.addEventListener('click', handleAddEmail);
+emailInput.addEventListener('keypress', (event) => {
+  if (event.key === 'Enter') {
+    handleAddEmail();
+  }
 });
+
+// --- Initialization ---
+logToTerminal("Frontend script loaded. Ready for Google Sign-In.");
+// Google Sign-In is initialized automatically by the library script tag.
