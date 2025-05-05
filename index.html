@@ -3,59 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>:: HACKER_INTERFACE ::</title>
+    <title>SENTINEL_PROTOCOL</title>
     <link rel="stylesheet" href="style.css">
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div class="terminal-container">
-        <div id="output">
-            <pre>Initializing HACKER_INTERFACE v1.0...</pre>
-            <pre>Awaiting user authentication...</pre>
+    <div class="terminal">
+        <div class="output-container">
+            <div class="line-numbers" id="line-numbers">
+                <!-- Line numbers will be added dynamically -->
+            </div>
+            <div class="output" id="output">
+                <!-- Console output goes here -->
+            </div>
         </div>
-
-        <div id="login-section" class="center-content">
-            <!-- Google Sign In Button -->
-            <div id="g_id_onload"
-                 data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
+        <div id="login-prompt" class="input-line">
+             <span class="prompt">#</span>
+             <span class="login-message">Awaiting user authentication... Please sign in.</span>
+             <!-- Google Sign In Button -->
+             <div id="g_id_onload"
+                  data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
                  data-callback="handleCredentialResponse"
                  data-context="signin"
                  data-ux_mode="popup"
                  data-login_uri=""
                  data-auto_prompt="false">
-            </div>
-
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-shape="rectangular"
-                 data-theme="outline"
-                 data-text="signin_with"
-                 data-size="large"
-                 data-logo_alignment="left">
-            </div>
-             <pre id="login-status" class="status-message"></pre>
+             </div>
+             <div class="g_id_signin"
+                  data-type="icon"
+                  data-shape="rectangular"
+                  data-theme="outline"
+                  data-text="signin_with"
+                  data-size="large"
+                  data-logo_alignment="left">
+             </div>
         </div>
-
-        <div id="main-content" style="display: none;">
-            <pre>Authentication successful. Access granted.</pre>
-            <pre>Registered Email Targets:</pre>
-            <ul id="email-list">
-                <!-- Emails will be loaded here -->
-            </ul>
-            <hr class="separator">
-            <div class="input-area">
-                <span class="prompt">></span>
-                <input type="email" id="email-input" placeholder="add target email..." autocomplete="off">
-                <button id="add-email-btn">ADD</button>
-            </div>
-             <pre id="action-status" class="status-message"></pre>
+        <div id="input-line" class="input-line" style="display: none;">
+            <span class="prompt" id="user-prompt">></span>
+            <input type="text" id="command-input" autocomplete="off" spellcheck="false">
         </div>
-
-         <div id="loading-indicator" style="display: none;">
-             <pre> > Processing request... <span class="spinner">|</span></pre>
-         </div>
-
+         <div id="loading-indicator" class="loading" style="display: none;">Processing...</div>
     </div>
 
     <script src="script.js"></script>

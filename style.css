@@ -1,170 +1,133 @@
 body {
-  background-color: #000;
-  color: #0f0; /* Bright green */
-  font-family: 'Courier New', Courier, monospace;
+  background-color: #1a1a1a; /* Darker grey */
+  color: #e0e0e0; /* Light grey text */
+  font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
   margin: 0;
-  padding: 20px;
-  overflow-x: hidden; /* Prevent horizontal scroll */
-}
-
-.terminal-container {
-  border: 1px solid #0f0;
-  padding: 15px;
-  min-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 15px #0f0 inset;
-  background-color: rgba(0, 20, 0, 0.8); /* Slightly transparent dark green */
-}
-
-#output pre,
-#login-status,
-#action-status {
-  margin: 5px 0;
-  white-space: pre-wrap; /* Allow wrapping */
-  word-wrap: break-word; /* Break long words */
-  animation: flicker 1.5s infinite alternate; /* Subtle flicker */
-}
-
-.center-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh; /* Center vertically */
-  text-align: center;
-}
-
-#login-section {
-  /* Styles for the Google button container might be needed */
-}
-
-#main-content {
-   flex-grow: 1; /* Take remaining space */
-   display: flex;
-   flex-direction: column;
-}
-
-#email-list {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-  max-height: 40vh; /* Limit height */
-  overflow-y: auto; /* Add scroll if needed */
-  border: 1px dashed #0a0;
   padding: 10px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-#email-list li {
+.terminal {
+  border: 1px solid #555;
+  min-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #0f0f0f; /* Very dark */
+  overflow: hidden; /* Prevent body scrollbars if terminal fills height */
+}
+
+.output-container {
+  flex-grow: 1;
+  display: flex;
+  overflow-y: auto; /* Scroll only the output area */
+  position: relative; /* For potential absolute positioning inside */
+}
+
+.line-numbers {
+  background-color: #1f1f1f;
+  color: #666;
+  padding: 5px 8px 5px 5px;
+  text-align: right;
+  user-select: none; /* Prevent selecting line numbers */
+  font-size: 13px; /* Slightly smaller */
+  white-space: pre; /* Ensure numbers stay aligned */
+  border-right: 1px solid #444;
+}
+
+.output {
+  flex-grow: 1;
   padding: 5px;
-  margin-bottom: 3px;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
-  word-break: break-all; /* Break long emails */
+  white-space: pre-wrap; /* Wrap long lines */
+  word-wrap: break-word; /* Break long words */
 }
 
-#email-list li:hover {
-  background-color: #0f0;
-  color: #000;
+/* Style HTML coming from Gemini */
+.output p, .output ul, .output li, .output pre, .output span, .output div {
+  margin: 2px 0; /* Minimal spacing */
+  padding: 0;
+  background-color: transparent; /* Ensure no weird backgrounds */
+  color: inherit; /* Inherit terminal color */
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.output ul {
+  padding-left: 20px; /* Indent lists */
+  list-style: disc;
+}
+.output strong, .output b {
+  font-weight: bold;
+  color: #ffffff; /* Brighter white for emphasis */
+}
+.output em, .output i {
+  font-style: italic;
+  color: #a0a0a0; /* Slightly different grey for italics */
 }
 
-.separator {
-  border: none;
-  height: 1px;
-  background-color: #0f0;
-  margin: 15px 0;
-}
 
-.input-area {
+.input-line {
   display: flex;
   align-items: center;
-  margin-top: auto; /* Push to bottom */
-  padding-top: 10px;
+  padding: 5px 10px;
+  background-color: #1f1f1f;
+  border-top: 1px solid #444;
+  min-height: 25px; /* Ensure it has some height */
 }
+
+#login-prompt {
+  /* Styles specific to the login prompt line if needed */
+  color: #aaa;
+}
+.login-message {
+  margin-right: 10px;
+}
+/* Style the Google Button container */
+#login-prompt .g_id_signin {
+ margin-left: auto; /* Push button to the right */
+ height: 25px; /* Try to match input line height */
+}
+/* Fine-tune google button appearance if necessary */
+#login-prompt .g_id_signin iframe {
+ vertical-align: middle;
+}
+
 
 .prompt {
-  margin-right: 10px;
-  font-weight: bold;
+  color: #50fa7b; /* Green prompt */
+  margin-right: 8px;
+  user-select: none;
 }
 
-#email-input {
+#command-input {
   flex-grow: 1;
   background-color: transparent;
   border: none;
-  border-bottom: 1px solid #0f0;
-  color: #0f0;
-  padding: 8px;
+  color: #f0f0f0; /* User input color */
   font-family: inherit;
-  font-size: 1em;
-  outline: none; /* Remove default outline */
-  margin-right: 10px;
+  font-size: inherit;
+  outline: none;
+  padding: 2px;
 }
 
-#email-input::placeholder {
-  color: #090;
-  opacity: 0.7;
+.loading {
+  color: #ffb86c; /* Orange for loading */
+  padding: 2px 10px;
+  font-style: italic;
+  border-top: 1px dashed #555;
 }
 
-button#add-email-btn {
-  background-color: #0f0;
-  color: #000;
-  border: none;
-  padding: 8px 15px;
-  font-family: inherit;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-button#add-email-btn:hover {
-  background-color: #000;
-  color: #0f0;
-  border: 1px solid #0f0;
-}
-
-.status-message {
-  color: #ff0; /* Yellow for status */
-  margin-top: 10px;
-  min-height: 1.2em; /* Reserve space */
-}
-
-#loading-indicator {
-  position: fixed; /* Or absolute relative to container */
-  bottom: 10px;
-  left: 10px;
-  background-color: rgba(0,0,0,0.7);
-  padding: 5px 10px;
-  border: 1px solid #0f0;
-}
-
-.spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes flicker {
-0%, 100% { opacity: 1; }
-50% { opacity: 0.9; }
-}
-
-@keyframes spin {
-0% { transform: rotate(0deg); content: "|"; }
-25% { content: "/"; }
-50% { transform: rotate(180deg); content: "-"; }
-75% { content: "\\"; }
-100% { transform: rotate(360deg); content: "|"; }
-}
-
-/* Scrollbar styling */
+/* Minimal Scrollbar styling */
 ::-webkit-scrollbar {
-width: 8px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-background: #050;
+  background: #2b2b2b;
 }
 ::-webkit-scrollbar-thumb {
-background: #0f0;
+  background: #555;
 }
 ::-webkit-scrollbar-thumb:hover {
-background: #3f3;
+  background: #777;
 }
