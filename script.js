@@ -176,6 +176,7 @@ async function sendCommandToAppsScript(command, isJsonRequest = false) {
 
 /** Handles Google Sign-In response. */
 function handleCredentialResponse(response) {
+    //Removed
     idToken = response.credential;
     console.log("Google Sign-In successful.");
     addOutputLine("<p style='color: #50fa7b;'>Authentication successful.</p>");
