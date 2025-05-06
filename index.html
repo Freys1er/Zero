@@ -1,51 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENTINEL_PROTOCOL</title>
+    <title>:: SENTINEL_PROTOCOL ::</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
+
 <body>
-    <div class="terminal">
-        <div class="output-container">
-            <div class="line-numbers" id="line-numbers">
-                <!-- Line numbers will be added dynamically -->
+    <!-- Mobile View Toggle Button (initially hidden by CSS) -->
+    <button id="view-toggle-btn" class="mobile-only-flex">Show JSON</button>
+
+    <div class="app-container mobile-console-active"> <!-- Start with console active on mobile -->
+        <!-- Left Pane: Console -->
+        <div class="terminal-container">
+            <div class="terminal">
+                <div class="output-container">
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <div class="output" id="output"></div>
+                </div>
+                <div id="login-prompt" class="input-line">
+                    <span class="prompt">#</span>
+                    <span class="login-message">Awaiting user authentication...</span>
+                    <div id="g_id_onload"
+                        data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
+                        data-callback="handleCredentialResponse" data-ux_mode="popup" data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin" data-type="icon" data-theme="outline" data-size="large"></div>
+                </div>
+                <div id="input-line" class="input-line" style="display: none;">
+                    <span class="prompt" id="user-prompt">></span>
+                    <input type="text" id="command-input" autocomplete="off" spellcheck="false">
+                </div>
+                <div id="loading-indicator" class="loading" style="display: none;">Processing...</div>
             </div>
-            <div class="output" id="output">
-                <!-- Console output goes here -->
+        </div>
+
+        <!-- Right Pane: JSON Viewer -->
+        <div class="json-viewer-container">
+            <div class="json-viewer-header">
+                zero.json <button id="refresh-json-btn" title="Refresh JSON View">🔄</button>
             </div>
+            <pre id="json-display">// JSON data will appear here...</pre>
         </div>
-        <div id="login-prompt" class="input-line">
-             <span class="prompt">#</span>
-             <span class="login-message">Awaiting user authentication... Please sign in.</span>
-             <!-- Google Sign In Button -->
-             <div id="g_id_onload"
-                  data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
-                 data-callback="handleCredentialResponse"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-login_uri=""
-                 data-auto_prompt="false">
-             </div>
-             <div class="g_id_signin"
-                  data-type="icon"
-                  data-shape="rectangular"
-                  data-theme="outline"
-                  data-text="signin_with"
-                  data-size="large"
-                  data-logo_alignment="left">
-             </div>
-        </div>
-        <div id="input-line" class="input-line" style="display: none;">
-            <span class="prompt" id="user-prompt">></span>
-            <input type="text" id="command-input" autocomplete="off" spellcheck="false">
-        </div>
-         <div id="loading-indicator" class="loading" style="display: none;">Processing...</div>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
