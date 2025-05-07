@@ -1,53 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>:: SENTINEL_PROTOCOL ::</title>
+    <title>J.A.R.V.I.S. Interface</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
-    <!-- Mobile View Toggle Button (initially hidden by CSS) -->
-    <button id="view-toggle-btn" class="mobile-only-flex">Show JSON</button>
-
-    <div class="app-container mobile-console-active"> <!-- Start with console active on mobile -->
-        <!-- Left Pane: Console -->
-        <div class="terminal-container">
-            <div class="terminal">
-                <div class="output-container">
-                    <div class="line-numbers" id="line-numbers"></div>
-                    <div class="output" id="output"></div>
-                </div>
-                <div id="login-prompt" class="input-line">
-                    <div id="g_id_onload"
-                        data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
-                        data-callback="handleCredentialResponse" data-ux_mode="popup" data-auto_prompt="false">
-                    </div>
-                    <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="large"
-                        data-width="500">
-                    </div>
-                </div>
-                <div id="input-line" class="input-line" style="display: none;">
-                    <span class="prompt" id="user-prompt">></span>
-                    <input type="text" id="command-input" autocomplete="off" spellcheck="false">
-                </div>
-                <div id="loading-indicator" class="loading" style="display: none;">Processing...</div>
-            </div>
+    <div id="google-signin-button-container">
+        <!-- Google Sign-In button will be rendered here by GSI -->
+        <div id="g_id_onload" data-client_id="490934668566-cb3piekunttaef3g2s7svoehe8do5fkj.apps.googleusercontent.com"
+            data-callback="handleGoogleSignIn" data-auto_prompt="false">
         </div>
-
-        <!-- Right Pane: JSON Viewer -->
-        <div class="json-viewer-container">
-            <div class="json-viewer-header">
-                zero.json <button id="refresh-json-btn" title="Refresh JSON View">🔄</button>
-            </div>
-            <pre id="json-display">// JSON data will appear here...</pre>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with"
+            data-shape="rectangular" data-logo_alignment="left">
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="jarvis-interface" class="hidden">
+        <div id="jarvis-background-content">
+            <!-- JARVIS will populate this area with full HTML views -->
+            <div class="welcome-message">
+                <h1>Welcome</h1>
+                <p>Please sign in to activate J.A.R.V.I.S.</p>
+            </div>
+        </div>
+
+        <div id="jarvis-prompt-container" class="floating-prompt">
+            <input type="text" id="jarvis-command-input" placeholder="How can I assist you, sir?">
+            <button id="jarvis-submit-button">SEND</button>
+        </div>
+        <div id="jarvis-collapsed-trigger" class="collapsed-circle hidden">J</div>
+    </div>
+
+    <script src="client.js"></script>
 </body>
 
 </html>
